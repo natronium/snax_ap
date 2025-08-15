@@ -1,0 +1,9 @@
+[package]
+name = "snax_ap"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+constcat = "0.6.1"
+dll-syringe = "0.17.0"
+retour = "0.3.1"
