@@ -1,32 +1,11 @@
-use std::ffi::{CStr, c_char};
-
 use pelite::{
     pe::{Pe, Rva},
     pe64::PeView,
 };
 use retour::static_detour;
-use windows::Win32::{
-    Foundation::*,
-    System::{LibraryLoader::GetModuleHandleA, SystemServices::*},
-};
+use std::ffi::{CStr, c_char};
+use windows::Win32::System::LibraryLoader::GetModuleHandleA;
 use windows::core::PCSTR;
-
-#[unsafe(no_mangle)]
-pub extern "system" fn DllMain(
-    _hinst_dll: HINSTANCE,
-    call_reason: u32,
-    _lpv_reserved: *mut (),
-) -> bool {
-    match call_reason {
-        DLL_PROCESS_ATTACH => install_hooks(),
-        DLL_PROCESS_DETACH => (),
-        DLL_THREAD_ATTACH => (),
-        DLL_THREAD_DETACH => (),
-        _ => (),
-    };
-
-    true
-}
 
 type AddItemFn = extern "C" fn(*const (), *const c_char, u64) -> u64;
 
@@ -36,7 +15,8 @@ static_detour! {
 
 const ADD_ITEM_TO_INVENTORY_RVA: Rva = 0x2f1500;
 
-fn install_hooks() {
+#[unsafe(no_mangle)]
+extern "C" fn install_hooks() {
     // Bugsnax.exe add_item_to_inventory lives at 0x7ff79af91500
     //  or .text (0x7ff79aca1000) + 0x2f0500
     //  or base  (0x7ff79aca0000) + 0x2f1500
@@ -52,18 +32,23 @@ fn install_hooks() {
             .expect("could not calculate Virtual Address from Relative for add_item_to_inventory");
 
         on_add_item
-            .initialize(std::mem::transmute::<u64, AddItemFn>(add_item_va), |a, b, c| {
-                let name = CStr::from_ptr(b)
-                    .to_str()
-                    .expect("could not convert item def path into str");
-                print!("add_item! arg1: {a:?} arg2: {name} arg3: {c} ");
-                let result = on_add_item.call(a, b, c);
-                println!("returned: {result}");
-                result
-            })
+            .initialize(
+                std::mem::transmute::<u64, AddItemFn>(add_item_va),
+                |a, b, c| {
+                    let name = CStr::from_ptr(b)
+                        .to_str()
+                        .expect("could not convert item def path into str");
+                    print!("add_item! arg1: {a:?} arg2: {name} arg3: {c} ");
+                    let result = on_add_item.call(a, b, c);
+                    println!("returned: {result}");
+                    result
+                },
+            )
             .expect("could not retour add_item_to_inventory");
 
-        on_add_item.enable().expect("could not enable on_add_item detour");
+        on_add_item
+            .enable()
+            .expect("could not enable on_add_item detour");
     }
 }
 
