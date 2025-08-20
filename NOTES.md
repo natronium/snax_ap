@@ -1,0 +1,14 @@
+## TODO
+- Interprocess communication
+- Internal infrastructure
+    - Message types
+    - More general purpose function hooking mechanism
+    - Ability to activate things in game
+- Archipelago
+- Text client?
+- Apworld
+- Better dll injection (include_bytes! the dll and unpack in an appdata folder)
+- data saving
+    - save data for game
+    - configuration
+- content mod (overlay)
