@@ -16,7 +16,7 @@ static_detour! {
 const ADD_ITEM_TO_INVENTORY_RVA: Rva = 0x2f1500;
 
 #[unsafe(no_mangle)]
-extern "C" fn install_hooks() {
+pub extern "C" fn install_hooks() {
     // Bugsnax.exe add_item_to_inventory lives at 0x7ff79af91500
     //  or .text (0x7ff79aca1000) + 0x2f0500
     //  or base  (0x7ff79aca0000) + 0x2f1500

@@ -1,5 +1,7 @@
 use constcat::concat;
 use dll_syringe::{Syringe, process::OwnedProcess};
+use nameof::name_of;
+use snax_lib::install_hooks;
 use std::{
     io::{BufRead, BufReader},
     process::{Command, Stdio},
@@ -20,10 +22,11 @@ fn main() {
     let syringe = Syringe::for_process(target_process);
     let injected_payload = syringe.inject("./target/debug/snax_lib.dll").unwrap();
     let init = unsafe {
-        syringe.get_raw_procedure::<extern "C" fn() -> ()>(injected_payload, "install_hooks")
-    }
-    .expect("failed to load procedure \"install_hooks\"")
-    .expect("couldn't find procedure");
+        syringe
+            .get_raw_procedure::<extern "C" fn() -> ()>(injected_payload, name_of!(install_hooks))
+            .expect("failed to load procedure \"install_hooks\"")
+            .expect("couldn't find procedure")
+    };
 
     init.call().expect("install_hooks RPC failed");
 

@@ -1346,6 +1346,7 @@ dependencies = [
  "dll-syringe",
  "nameof",
  "rfd",
+ "snax_lib",
 ]
 
 [[package]]
