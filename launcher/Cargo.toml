@@ -6,6 +6,9 @@ edition.workspace = true
 [dependencies]
 constcat = "0.6.1"
 dll-syringe = "0.17.0"
+eframe = "0.32.1"
+egui_logger = "0.8.0"
+log = "0.4.27"
 nameof = "1.3.0"
 rfd = "0.15.4"
 snax_lib = { path = "../injected_dll" }
