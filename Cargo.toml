@@ -1,31 +1,11 @@
-[package]
-name = "snax_ap"
+[workspace]
+resolver = "3"
+members = ["launcher", "injected_dll"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 
-[[bin]]
-name = "snax_ap"
-
-[lib]
-name = "snax_lib"
-crate-type = ["cdylib"]
-
-[dependencies]
-constcat = "0.6.1"
-dll-syringe = "0.17.0"
-pelite = "0.10.0"
-retour = { version = "0.3.1", features = ["static-detour"] }
-
-[dependencies.windows]
-version = "0.*"
-features = [
-    "Win32_Foundation",
-    "Win32_System_SystemServices",
-    "Win32_System_LibraryLoader",
-    "Win32_System_Diagnostics_Debug",
-    "Win32_System_SystemInformation",
-]
-
 # https://github.com/CasualX/pelite/issues/287
 [patch.crates-io]
-pelite = { git = "https://github.com/lifegpc/pelite.git" }
+pelite = { git = "https://github.com/lifegpc/pelite.git", rev = "d4fad2a01a9a1a71e36f10f312112bd9b63c9a3d"}
