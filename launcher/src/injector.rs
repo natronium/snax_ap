@@ -1,7 +1,7 @@
 use dll_syringe::Syringe;
 use dll_syringe::process::OwnedProcess;
 use nameof::name_of;
-use snax_lib::install_hooks;
+use snax_lib::init;
 use std::path::Path;
 use std::process::ChildStdout;
 use std::process::Command;
@@ -24,8 +24,7 @@ pub fn install_mod(exe_path: &Path) -> ChildStdout {
     let injected_payload = syringe.inject("./target/debug/snax_lib.dll").unwrap();
 
     let init = unsafe {
-        syringe
-            .get_raw_procedure::<extern "C" fn() -> ()>(injected_payload, name_of!(install_hooks))
+        syringe.get_raw_procedure::<extern "C" fn() -> ()>(injected_payload, name_of!(init))
     }
     .expect("failed to load procedure \"install_hooks\"")
     .expect("couldn't find procedure");

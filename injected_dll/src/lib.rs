@@ -7,6 +7,11 @@ use std::ffi::{CStr, c_char};
 use windows::Win32::System::LibraryLoader::GetModuleHandleA;
 use windows::core::PCSTR;
 
+#[unsafe(no_mangle)]
+pub extern "C" fn init() {
+    install_hooks();
+}
+
 type AddItemFn = extern "C" fn(*const (), *const c_char, u64) -> u64;
 
 static_detour! {
@@ -15,8 +20,7 @@ static_detour! {
 
 const ADD_ITEM_TO_INVENTORY_RVA: Rva = 0x2f1500;
 
-#[unsafe(no_mangle)]
-pub extern "C" fn install_hooks() {
+fn install_hooks() {
     // Bugsnax.exe add_item_to_inventory lives at 0x7ff79af91500
     //  or .text (0x7ff79aca1000) + 0x2f0500
     //  or base  (0x7ff79aca0000) + 0x2f1500
