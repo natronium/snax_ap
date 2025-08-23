@@ -63,16 +63,16 @@ fn main() {
         .unwrap();
 }
 
-struct CommunicationWrapper {
-    channel_out: Sender<APMessage>,
-    channel_in: Receiver<SnaxMessage>,
-}
-
 struct ConnectionInfo {
     host: String,
     port: u16,
     slot_name: String,
     password: Option<String>,
+}
+
+struct CommunicationWrapper {
+    channel_out: Sender<APMessage>,
+    channel_in: Receiver<SnaxMessage>,
 }
 
 impl CommunicationWrapper {
@@ -108,8 +108,7 @@ impl CommunicationWrapper {
                 loop {
                     select! {
                         result = client.recv() => {
-                            if let Some(msg)=
-                            CommunicationWrapper::handle_message_from_ap(result){
+                            if let Some(msg) = CommunicationWrapper::handle_message_from_ap(result) {
                                 send_by_ap.send(msg).await.expect("Could not send {msg:?} on send_by_ap channel");
                             }
                         }
