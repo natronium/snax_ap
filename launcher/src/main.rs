@@ -25,13 +25,15 @@ fn main() {
         .enable_all()
         .build()
         .expect("Could not build tokio runtime");
+
     let default_connection = ConnectionInfo {
         host: "localhost".to_string(),
         port: 38281,
         slot_name: "Player1".to_string(),
         password: None,
     };
-    let mut snax_wrapper = CommunicationWrapper::start(default_connection, runtime); // client.location_checks(vec![200]);
+
+    let mut snax_wrapper = CommunicationWrapper::start(default_connection, runtime);
 
     std::thread::spawn(move || {
         while let Some(msg) = snax_wrapper.channel_in.blocking_recv() {
@@ -80,10 +82,10 @@ impl CommunicationWrapper {
         let (send_by_ap, recv_by_snax) = mpsc::channel::<SnaxMessage>(100);
         let (send_by_snax, mut recv_by_ap) = mpsc::channel::<APMessage>(100);
         let mut client = runtime
-            .block_on(ArchipelagoClient::new(
-                &connection_info.host,
-                connection_info.port,
-            ))
+            .block_on(ArchipelagoClient::new(&format!(
+                "{}:{}",
+                connection_info.host, connection_info.port
+            )))
             .expect("could not connect to archipelago");
         let result = runtime
             .block_on(client.connect(
@@ -108,7 +110,7 @@ impl CommunicationWrapper {
                 loop {
                     select! {
                         result = client.recv() => {
-                            if let Some(msg) = CommunicationWrapper::handle_message_from_ap(result) {
+                            if let Some(result) = result.transpose() && let Some(msg) = CommunicationWrapper::handle_message_from_ap(result){
                                 send_by_ap.send(msg).await.expect("Could not send {msg:?} on send_by_ap channel");
                             }
                         }
@@ -171,14 +173,12 @@ impl CommunicationWrapper {
                         .await
                 }
                 APMessage::LocationsToScout { location_ids } => {
-                    let boop = client.location_scouts(location_ids, 0).await;
-                    match boop {
-                        Ok(scouts) => {
-                            println!("Scouts success! {scouts:?}");
-                            Ok(())
-                        }
-                        Err(err) => Err(err),
-                    }
+                    client
+                        .send(ClientMessage::LocationScouts(LocationScouts {
+                            locations: location_ids,
+                            create_as_hint: 0,
+                        }))
+                        .await
                 }
             }
             .expect("TODO: handle ArchipelagoErrors");

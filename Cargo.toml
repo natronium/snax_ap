@@ -9,3 +9,4 @@ edition = "2024"
 # https://github.com/CasualX/pelite/issues/287
 [patch.crates-io]
 pelite = { git = "https://github.com/lifegpc/pelite.git", rev = "d4fad2a01a9a1a71e36f10f312112bd9b63c9a3d" }
+tungstenite = { git = "https://github.com/Natronium/tungstenite-rs.git", branch = "permessage-deflate" }
