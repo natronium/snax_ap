@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 use tokio::{
-    runtime::{Builder, Runtime},
+    runtime::Builder,
     select,
     sync::mpsc::{self, Receiver, Sender},
 };
@@ -21,11 +21,6 @@ fn main() {
     // let exe_location = detect_bugsnax_location().unwrap();
     // let snax_stdout = injector::install_mod(&exe_location);
 
-    let runtime = Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("Could not build tokio runtime");
-
     let default_connection = ConnectionInfo {
         host: "localhost".to_string(),
         port: 38281,
@@ -33,7 +28,7 @@ fn main() {
         password: None,
     };
 
-    let mut snax_wrapper = CommunicationWrapper::start(default_connection, runtime);
+    let mut snax_wrapper = CommunicationWrapper::start(default_connection);
 
     std::thread::spawn(move || {
         while let Some(msg) = snax_wrapper.channel_in.blocking_recv() {
@@ -78,34 +73,40 @@ struct CommunicationWrapper {
 }
 
 impl CommunicationWrapper {
-    fn start(connection_info: ConnectionInfo, runtime: Runtime) -> Self {
+    fn start(connection_info: ConnectionInfo) -> Self {
         let (send_by_ap, recv_by_snax) = mpsc::channel::<SnaxMessage>(100);
         let (send_by_snax, mut recv_by_ap) = mpsc::channel::<APMessage>(100);
-        let mut client = runtime
-            .block_on(ArchipelagoClient::new(&format!(
-                "{}:{}",
-                connection_info.host, connection_info.port
-            )))
-            .expect("could not connect to archipelago");
-        let result = runtime
-            .block_on(client.connect(
-                "Bugsnax",
-                &connection_info.slot_name,
-                connection_info.password.as_deref(),
-                Some(0b111),
-                vec!["AP".to_string()],
-            ))
-            .expect("Could not connect to slot Bugsnax:Player1");
 
-        if let Some(msg) =
-            CommunicationWrapper::handle_message_from_ap(Ok(ServerMessage::Connected(result)))
-        {
-            send_by_ap
-                .blocking_send(msg)
-                .expect("Could not send {msg:?} on send_by_ap channel");
-        }
+        std::thread::Builder::new().name("AP Communication Thread".to_string()).spawn(move || {
+            let runtime = Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("Could not build tokio runtime");
 
-        std::thread::spawn(move || {
+            let mut client = runtime
+                .block_on(ArchipelagoClient::new(&format!(
+                    "{}:{}",
+                    connection_info.host, connection_info.port
+                )))
+                .expect("could not connect to archipelago");
+            let result = runtime
+                .block_on(client.connect(
+                    "Bugsnax",
+                    &connection_info.slot_name,
+                    connection_info.password.as_deref(),
+                    Some(0b111),
+                    vec!["AP".to_string()],
+                ))
+                .expect("Could not connect to slot Bugsnax:Player1");
+
+            if let Some(msg) =
+                CommunicationWrapper::handle_message_from_ap(Ok(ServerMessage::Connected(result)))
+            {
+                send_by_ap
+                    .blocking_send(msg)
+                    .expect("Could not send {msg:?} on send_by_ap channel");
+            }
+
             runtime.block_on(async move {
                 loop {
                     select! {
@@ -120,7 +121,7 @@ impl CommunicationWrapper {
                     }
                 }
             });
-        });
+        }).expect("Could not start AP Communication thread!");
 
         CommunicationWrapper {
             channel_in: recv_by_snax,
