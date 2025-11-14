@@ -11,7 +11,17 @@
 - data saving
     - save data for game
     - configuration
+- investigate tripshot tool acquisition weirdness
+- decide starting point (likely town to start, but where in the plot?)
 - content mod (overlay)
+    - disable unwanted tool additions
+    - add triggers to snax, tools, quest completions, etc. to activate AP location send
+    - modify town sequencing
+    - modify which zones are available when
+- Tracker:
+    - extract maps, item locations
+    
+
 
 
 ## Intended Loader App flow:
@@ -23,3 +33,6 @@
   - Send messages from archipelago to snax_lib
   - Send messages from snax_lib to archipelago
   - Optional: Display textclient stuff to user
+
+
+## Important Places
