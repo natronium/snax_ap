@@ -1,5 +1,6 @@
 use constcat::concat;
 use std::{
+    io::{BufRead as _, BufReader},
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -8,8 +9,8 @@ mod injector;
 // mod loader_app;
 
 fn main() {
-    // let exe_location = detect_bugsnax_location().unwrap();
-    // let snax_stdout = injector::install_mod(&exe_location);
+    let exe_location = detect_bugsnax_location().unwrap();
+    let snax_stdout = injector::install_mod(&exe_location);
 
     let default_connection = communication_wrapper::ConnectionInfo {
         host: "localhost".to_string(),
@@ -26,28 +27,35 @@ fn main() {
         }
     });
 
-    std::thread::sleep(Duration::from_secs(2));
+    let reader = BufReader::new(snax_stdout);
 
-    snax_wrapper
-        .channel_out
-        .blocking_send(communication_wrapper::APMessage::LocationsToScout {
-            location_ids: vec![200],
-        })
-        .unwrap();
-    std::thread::sleep(Duration::from_secs(2));
+    for line in reader.lines() {
+        let line = line.expect("could not read line from snax stdout");
+        println!("{line}");
+    }
 
-    snax_wrapper
-        .channel_out
-        .blocking_send(communication_wrapper::APMessage::LocationsToCheck {
-            location_ids: vec![200],
-        })
-        .unwrap();
-    std::thread::sleep(Duration::from_secs(2));
+    // std::thread::sleep(Duration::from_secs(2));
 
-    snax_wrapper
-        .channel_out
-        .blocking_send(communication_wrapper::APMessage::GoalCompletion {})
-        .unwrap();
+    // snax_wrapper
+    //     .channel_out
+    //     .blocking_send(communication_wrapper::APMessage::LocationsToScout {
+    //         location_ids: vec![200],
+    //     })
+    //     .unwrap();
+    // std::thread::sleep(Duration::from_secs(2));
+
+    // snax_wrapper
+    //     .channel_out
+    //     .blocking_send(communication_wrapper::APMessage::LocationsToCheck {
+    //         location_ids: vec![200],
+    //     })
+    //     .unwrap();
+    // std::thread::sleep(Duration::from_secs(2));
+
+    // snax_wrapper
+    //     .channel_out
+    //     .blocking_send(communication_wrapper::APMessage::GoalCompletion {})
+    //     .unwrap();
 }
 
 mod communication_wrapper;
